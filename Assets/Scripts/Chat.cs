@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,20 +7,15 @@ using System.Collections.Generic;
 public class Chat : MonoBehaviour
 {
 	public Rect chatPosition;
-
-	public string message;
 	public List<string> messages;
 	public GUIStyle MessageStyle;
-	
-	public float LineHeight;
-	
-	NetworkManager NetworkM;
-	
-	public bool ChatActive = false;
-	
-	public bool ProximityChat = true; //Send to players in my area
-	public bool ServerChat = false; //Send to all players on the server
-	public bool PartyChat = false; //Send to all players in my party
+
+	private NetworkManager NetworkM;
+	private string message;
+	private float LineHeight;
+	private bool ChatActive = false;
+	private enum ChatModes {PROXIMITY, SERVER, PARTY};
+	private ChatModes chatMode = ChatModes.PROXIMITY;
 	
 	void Start()
 	{
@@ -28,31 +24,20 @@ public class Chat : MonoBehaviour
 	}
 	
 	void Update()
-	{
-		if(messages.Count > (int)chatPosition.height / 18)
-		{
-			messages.RemoveAt(0);
-		}
-		
+	{		
 		if (GetComponent<NetworkView>().isMine)
 		{
 			if(Input.GetKeyDown(KeyCode.F1))
 			{
-				ProximityChat = true;
-				ServerChat = false;
-				PartyChat = false;
+				chatMode = ChatModes.PROXIMITY;
 			}
 			else if(Input.GetKeyDown(KeyCode.F2))
 			{
-				ServerChat = true;
-				ProximityChat = false;
-				PartyChat = false;
+				chatMode = ChatModes.SERVER;
 			}
 			else if(Input.GetKeyDown(KeyCode.F3))
 			{
-				PartyChat = true;
-				ProximityChat = false;
-				ServerChat = false;
+				chatMode = ChatModes.PARTY;
 			}
 		}
 	}
@@ -62,46 +47,47 @@ public class Chat : MonoBehaviour
 		if(NetworkM.isConnected)
 		{
 			GUI.BeginGroup(chatPosition, "");
-			GUI.Box(new Rect(0, -30, chatPosition.width, chatPosition.height), "");
+			GUI.Box(new Rect(0, 0, chatPosition.width, chatPosition.height), "");
+			float messageHeight = 0;
 			for (var i = 0; i < messages.Count; i++)
 			{
-				GUI.Label(new Rect(5, (i * -0) + (15 * i), chatPosition.width - 10, 30), "<size=10>" + messages[i] + "</size>", MessageStyle);
+				GUI.Label(new Rect(5, messageHeight, chatPosition.width - 10, 30), "<size=10>" + messages[i] + "</size>", MessageStyle);
+				messageHeight += MessageStyle.CalcHeight(new GUIContent(messages[i]), chatPosition.width - 10);
+				while(messageHeight > chatPosition.height-25)
+				{
+					messageHeight -= MessageStyle.CalcHeight(new GUIContent(messages[0]), chatPosition.width - 10);
+					messages.RemoveAt(0);
+				}
 			}
 			
-			if(Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Return))
+			if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return)
 			{
-				if(message != "")
+				if(!String.IsNullOrEmpty(message))
 				{
-					LineHeight = MessageStyle.CalcHeight(new GUIContent(message), chatPosition.width - 10);
-					print (LineHeight);
-					if(LineHeight == 22)
+					switch (chatMode) 
 					{
-						print (message + " is a big message");
+						case ChatModes.PROXIMITY:
+							message = "<color=green>[PROXIMITY] </color>" + NetworkM.playerName + ": " + message;
+							break;
+						case ChatModes.SERVER:
+							message = "<color=cyan>[SERVER] </color>" + NetworkM.playerName + ": " + message;
+							break;
+						case ChatModes.PARTY:
+							message = "<color=yellow>[PARTY] </color>" + NetworkM.playerName + ": " + message;
+							break;
+						default:
+							break;
 					}
-					if(ProximityChat == true)
-					{
-						string tempMessage = ("<color=green>[PROXIMITY] </color>" + NetworkM.playerName + ": " + message);
-						SendMessage(tempMessage);
-					}
-					else if(ServerChat == true)
-					{
-						string tempMessage = ("<color=cyan>[SERVER] </color>" + NetworkM.playerName + ": " + message);
-						SendMessage(tempMessage);
-					}
-					else if(PartyChat == true)
-					{
-						string tempMessage = ("<color=yellow>[PARTY] </color>" + NetworkM.playerName + ": " + message);
-						SendMessage(tempMessage);
-					}
+					SendMessage(message);
+					
 				}
-				
+				message = "";
 				ChatActive = !ChatActive;
 			}
-			
 			if(ChatActive == true)
 			{
 				GUI.SetNextControlName("TextField");
-				message = GUI.TextField(new Rect(0, chatPosition.height - 30, chatPosition.width - 1, 25), message);
+				message = GUI.TextField(new Rect(0, chatPosition.height-25, chatPosition.width - 1, 25), message);
 				GUI.FocusControl("TextField");
 			}
 			GUI.EndGroup();
@@ -110,13 +96,13 @@ public class Chat : MonoBehaviour
 	
 	public void SendMessage(string msg)
 	{
-		GetComponent<NetworkView>().RPC ("ReciveMessage", RPCMode.All, msg);
-		message = "";
+		if (String.IsNullOrEmpty (msg))
+			return;
+		GetComponent<NetworkView>().RPC ("ReceiveMessage", RPCMode.All, msg);
 	}
-	
-		
+
 	[RPC]
-	public void ReciveMessage(string msg)
+	private void ReceiveMessage(string msg)
 	{
 		messages.Add(msg);
 	}
