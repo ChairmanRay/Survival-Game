@@ -13,7 +13,7 @@ public class PlayerCamera : MonoBehaviour {
 	public bool FirstPerson = true;
 	public bool SwitchSide = true;
 	
-	public float Xaxis = 1.06f;
+	private float Xaxis = 0.45f;
 	
 	void Start ()
 	{
@@ -43,7 +43,8 @@ public class PlayerCamera : MonoBehaviour {
 				FirstPersonCamera.GetComponent<Camera>().enabled = false;
 				ThirdPersonCamera.gameObject.SetActive(true);
 				
-				ThirdPersonCamera.transform.localPosition = new Vector3(Xaxis, 3f, -2.9f);
+				ThirdPersonCamera.transform.localPosition = new Vector3(Xaxis, 0.1f, -2f);
+				ThirdPersonCamera.GetComponent<Camera>().fieldOfView = FirstPersonCamera.GetComponent<Camera>().fieldOfView;
 				
 				if(Input.GetKeyDown(KeyCode.LeftAlt))
 				{
@@ -53,17 +54,17 @@ public class PlayerCamera : MonoBehaviour {
 				//On the right side
 				if(SwitchSide == true)
 				{
-					if(Xaxis <= 0.86f)
+					if(Xaxis <= 0.35f)
 					{
-						Xaxis += 0.8f;
+						Xaxis += 0.3f;
 					}
 				}
 				//On the left side
 				if(SwitchSide == false)
 				{
-					if(Xaxis >= -3f)
+					if(Xaxis >= -0.45f)
 					{
-						Xaxis -= 0.8f;
+						Xaxis -= 0.3f;
 					}
 				}
 			}

@@ -242,10 +242,12 @@ public class PlayerScript : MonoBehaviour {
 		if(Input.GetKey(KeyCode.Mouse1))
 		{
 			PrimaryWeapon.transform.localPosition = PrimaryWeapon.GetComponent<GunScript>().LocalAimPosition;
+			MyCamera.GetComponent<Camera>().fieldOfView = 40;
 		}
 		else
 		{
 			PrimaryWeapon.transform.localPosition = PrimaryWeapon.GetComponent<GunScript>().LocalHipPosition;
+			MyCamera.GetComponent<Camera>().fieldOfView = 60;
 		}
 		
 		// We apply gravity manually for more tuning control
