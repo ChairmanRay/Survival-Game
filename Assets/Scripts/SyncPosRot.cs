@@ -11,6 +11,8 @@ public class SyncPosRot : MonoBehaviour {
 	private Quaternion syncStartRotation = Quaternion.identity;
 	private Quaternion syncEndRotation = Quaternion.identity;
 	
+	private float StartDelay = 30;
+	
 	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info)
 	{
 		Vector3 syncPosition = transform.position;
@@ -48,6 +50,9 @@ public class SyncPosRot : MonoBehaviour {
 	void Start ()
 	{
 		lastSynchronizationTime = Time.time;
+		
+		//This fixes when you spawn, the other players guns are at your position
+		StartCoroutine(ChangeStartDelay());
 	}
 	
 	void Update ()
@@ -64,9 +69,16 @@ public class SyncPosRot : MonoBehaviour {
 	
 	private void SyncedMovement()
 	{
-		syncTime += Time.deltaTime;
+		syncTime += Time.deltaTime * StartDelay;
 		
 		GetComponent<Rigidbody>().position = Vector3.Lerp(syncStartPosition, syncEndPosition, syncTime / syncDelay);
 		GetComponent<Rigidbody>().rotation = Quaternion.Slerp(syncStartRotation, syncEndRotation, syncTime / syncDelay);
+	}
+	
+	IEnumerator ChangeStartDelay()
+	{
+		yield return new WaitForSeconds(0.2f);
+		
+		StartDelay = 1;
 	}
 }
