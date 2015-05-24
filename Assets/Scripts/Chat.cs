@@ -87,7 +87,7 @@ public class Chat : MonoBehaviour
 			if(ChatActive == true)
 			{
 				GUI.SetNextControlName("TextField");
-				message = GUI.TextField(new Rect(0, chatPosition.height-25, chatPosition.width - 1, 25), message);
+				message = GUI.TextField(new Rect(0, chatPosition.height - 25, chatPosition.width - 1, 25), message);
 				GUI.FocusControl("TextField");
 			}
 			GUI.EndGroup();

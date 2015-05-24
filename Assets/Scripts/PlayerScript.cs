@@ -138,6 +138,7 @@ public class PlayerScript : MonoBehaviour {
 			ThirstLevel -= (0.1f * Time.deltaTime);
 		}
 		
+		//If my player is touching the ground
 		if (grounded) 
 		{
 			if((Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A)))
@@ -229,6 +230,22 @@ public class PlayerScript : MonoBehaviour {
 				PlayerSpeedWalk = 5.0f;
 				PlayerSpeedSprint = 8.0f;
 			}
+		}
+		
+		//Left click (firing)
+		if(Input.GetKey(KeyCode.Mouse0))
+		{
+			
+		}
+		
+		//Right click (aiming)
+		if(Input.GetKey(KeyCode.Mouse1))
+		{
+			PrimaryWeapon.transform.localPosition = PrimaryWeapon.GetComponent<GunScript>().LocalAimPosition;
+		}
+		else
+		{
+			PrimaryWeapon.transform.localPosition = PrimaryWeapon.GetComponent<GunScript>().LocalHipPosition;
 		}
 		
 		// We apply gravity manually for more tuning control
