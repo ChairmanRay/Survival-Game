@@ -1,25 +1,50 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Zombie : MonoBehaviour {
+public class Zombie : MonoBehaviour 
+{
 
-	float sightRange = 25;
-	float attackRange = 10;
-	float moveSpeed = 5;
-	Transform target = null;
-	NavMeshAgent nav;
+	private float sightRange = 10;
+	private float attackRange = 3;
+	private float attackSpeed = 1;
+	private float nextAttack = 0;
+	private float moveSpeed = 5;
+	private Transform target = null;
+	private NavMeshAgent nav;
 	
-	void Awake () {
+	void Awake () 
+	{
 		nav = GetComponent <NavMeshAgent> ();
 	}
 
-	void Update () {
+	void Update () 
+	{
 		if (target == null && GameObject.FindGameObjectWithTag ("Player")) {
 			target = GameObject.FindGameObjectWithTag ("Player").transform;
 		} 
 		else if (target)
 		{
-			nav.SetDestination (target.position);
+			float range = Vector3.Distance (this.gameObject.transform.position, target.position);
+			if(range < attackRange)
+			{
+				if(Time.time > nextAttack)
+				{
+					nextAttack = Time.time + attackSpeed;
+					StartCoroutine("Attack");
+				}
+			}
+			else if(range < sightRange)
+				nav.SetDestination (target.position);
+			else
+				nav.SetDestination (this.gameObject.transform.position);
 		}
+	}
+
+	private IEnumerator Attack()
+	{
+		nav.velocity = new Vector3(0,0,0);
+		this.gameObject.transform.localScale = new Vector3(1, 0.9f, 1);
+		yield return new WaitForSeconds(0.3f);
+		this.gameObject.transform.localScale = new Vector3(1, 1, 1);
 	}
 }
