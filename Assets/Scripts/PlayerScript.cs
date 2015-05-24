@@ -13,8 +13,9 @@ public class PlayerScript : MonoBehaviour {
 	public GameObject QuickSlot5;
 	public GameObject QuickSlot6;
 	
-	//Health, hunger, thirst
+	//Health, hunger, thirst, stamina
 	public float Health = 100;
+	public float Stamina = 100;
 	public float HungerLevel = 100;
 	public float ThirstLevel = 100;
 	
@@ -33,6 +34,8 @@ public class PlayerScript : MonoBehaviour {
 	public bool IsJump = true;
 	public bool Crouching = false;
 	public bool Prone = false;
+	public bool IsSprinting = false;
+	
 	private bool WalkingDiagonal = false;
 	private bool grounded = false;
 	
@@ -175,8 +178,10 @@ public class PlayerScript : MonoBehaviour {
 			}
 			
 			//Sprint Movement
-			if(Input.GetKey(KeyCode.LeftShift))
+			if(Input.GetKey(KeyCode.LeftShift) && Stamina > 0)
 			{
+				IsSprinting = true;
+				Stamina -= (1.5f * Time.deltaTime);
 				// Calculate how fast we should be moving
 				targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 				targetVelocity = transform.TransformDirection(targetVelocity);
@@ -189,6 +194,16 @@ public class PlayerScript : MonoBehaviour {
 				velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
 				velocityChange.y = 0;
 				GetComponent<Rigidbody>().AddForce(velocityChange, ForceMode.VelocityChange);
+			}
+			else
+			{
+				IsSprinting = false;
+			}
+			
+			if(IsSprinting == false && Stamina < 100)
+			{
+				//Stamina needs to regenerate slower
+				Stamina += (1f * Time.deltaTime);
 			}
 			
 			//Crouching
@@ -286,10 +301,12 @@ public class PlayerScript : MonoBehaviour {
 			GUI.Label(new Rect(100, 80, 200, 200), ("Name: " + transform.name));
 			//Display your player's health
 			GUI.Label(new Rect(100, 100, 200, 200),"Health: " + Health);
+			//Display your player's stamina
+			GUI.Label(new Rect(100, 120, 200, 200),"Stamina: " + (int)Stamina);
 			//Display your player's hunger
-			GUI.Label(new Rect(100, 120, 200, 200),"Hunger: " + (int)HungerLevel);
+			GUI.Label(new Rect(100, 140, 200, 200),"Hunger: " + (int)HungerLevel);
 			//Display your player's thirst
-			GUI.Label(new Rect(100, 140, 200, 200),"Thirst: " + (int)ThirstLevel);
+			GUI.Label(new Rect(100, 160, 200, 200),"Thirst: " + (int)ThirstLevel);
 			//Crosshair texture
 			GUI.DrawTexture(new Rect(Screen.width / 2 - 22.5f, Screen.height / 2 - 22.5f, 45, 45), Crosshair, ScaleMode.StretchToFill, true, 10.0F);
 		}
