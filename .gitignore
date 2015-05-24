@@ -22,6 +22,12 @@ $RECYCLE.BIN/
 /Library/ShaderCache
 /Temp
 
+# Logs
+*.log
+
+#Solution files
+*.sln
+
 # =========================
 # Operating System Files
 # =========================
