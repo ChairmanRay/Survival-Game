@@ -13,9 +13,9 @@ public class SyncPosRot : MonoBehaviour {
 	
 	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info)
 	{
-		Vector3 syncPosition = Vector3.zero;
+		Vector3 syncPosition = transform.position;
 		Vector3 syncVelocity = Vector3.zero;
-		Quaternion syncRotation = Quaternion.identity;
+		Quaternion syncRotation = transform.rotation;
 		
 		if (stream.isWriting)
 		{
