@@ -17,6 +17,11 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Folders to ignore
+/Library/metadata
+/Library/ShaderCache
+/Temp
+
 # =========================
 # Operating System Files
 # =========================
