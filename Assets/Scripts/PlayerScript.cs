@@ -126,6 +126,18 @@ public class PlayerScript : MonoBehaviour {
 		transform.Rotate(new Vector3(0, Input.GetAxis("Mouse X"), 0) * Time.deltaTime * 200);
 		PrimaryWeapon.transform.localPosition = new Vector3(0.28f, -0.34f, 0.9f);
 		
+		if(HungerLevel > 0)
+		{
+			//This formula will change
+			HungerLevel -= (0.1f * Time.deltaTime);
+		}
+		
+		if(ThirstLevel > 0)
+		{
+			//This formula will change
+			ThirstLevel -= (0.1f * Time.deltaTime);
+		}
+		
 		if (grounded) 
 		{
 			if((Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A)))
@@ -251,8 +263,15 @@ public class PlayerScript : MonoBehaviour {
 	{
 		if (GetComponent<NetworkView>().isMine)
 		{
-			GUI.Label(new Rect(100, 100, 200, 200),"Health: " + Health);
+			//Display your player name
 			GUI.Label(new Rect(100, 80, 200, 200), ("Name: " + transform.name));
+			//Display your player's health
+			GUI.Label(new Rect(100, 100, 200, 200),"Health: " + Health);
+			//Display your player's hunger
+			GUI.Label(new Rect(100, 120, 200, 200),"Hunger: " + (int)HungerLevel);
+			//Display your player's thirst
+			GUI.Label(new Rect(100, 140, 200, 200),"Thirst: " + (int)ThirstLevel);
+			//Crosshair texture
 			GUI.DrawTexture(new Rect(Screen.width / 2 - 22.5f, Screen.height / 2 - 22.5f, 45, 45), Crosshair, ScaleMode.StretchToFill, true, 10.0F);
 		}
 	}
