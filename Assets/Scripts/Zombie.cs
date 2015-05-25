@@ -9,8 +9,7 @@ public class Zombie : MonoBehaviour
 	private float attackSpeed = 1;
 	private float nextAttack = 0;
 	private int attackDamage = 1;
-	private Transform target = null;
-	private PlayerHealth targetHealth = null;
+	private Transform targetPlayer = null;
 	private NavMeshAgent nav;
 	
 	void Awake () 
@@ -20,13 +19,25 @@ public class Zombie : MonoBehaviour
 
 	void Update () 
 	{
-		if (target == null && GameObject.FindGameObjectWithTag ("Player")) {
-			target = GameObject.FindGameObjectWithTag ("Player").transform;
-			targetHealth = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<PlayerHealth>();
+		GameObject[] targetList = GameObject.FindGameObjectsWithTag ("Player");
+		if (targetPlayer == null && targetList.Length>0) {
+			Transform closestPlayer = null;
+			float closestRange = float.MaxValue;
+			float range;
+			foreach (GameObject target in targetList)
+			{
+				range = Vector3.Distance (this.gameObject.transform.position, target.transform.position);
+				if(!closestPlayer || range < closestRange)
+				{
+					closestPlayer = target.transform;
+					closestRange = range;
+				}
+			}
+			targetPlayer = closestPlayer;
 		} 
-		else if (target)
+		else if (targetPlayer)
 		{
-			float range = Vector3.Distance (this.gameObject.transform.position, target.position);
+			float range = Vector3.Distance (this.gameObject.transform.position, targetPlayer.position);
 			if(range < attackRange)
 			{
 				if(Time.time > nextAttack)
@@ -36,9 +47,12 @@ public class Zombie : MonoBehaviour
 				}
 			}
 			else if(range < sightRange)
-				nav.SetDestination (target.position);
+				nav.SetDestination (targetPlayer.position);
 			else
+			{
 				nav.SetDestination (this.gameObject.transform.position);
+				targetPlayer = null;
+			}
 		}
 	}
 
@@ -47,7 +61,6 @@ public class Zombie : MonoBehaviour
 		nav.velocity = new Vector3(0,0,0);
 		this.gameObject.transform.localScale = new Vector3(1, 0.9f, 1);
 		yield return new WaitForSeconds(0.3f);
-		targetHealth.TakeDamage (attackDamage);
 		this.gameObject.transform.localScale = new Vector3(1, 1, 1);
 	}
 }
