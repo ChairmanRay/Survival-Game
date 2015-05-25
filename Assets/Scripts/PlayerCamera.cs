@@ -5,6 +5,8 @@ public class PlayerCamera : MonoBehaviour {
 	
 	public Transform MyPlayer;
 	
+	public Transform ActiveCamera;
+	
 	public Transform FirstPersonCamera;
 	public Transform ThirdPersonCamera;
 	
@@ -34,12 +36,14 @@ public class PlayerCamera : MonoBehaviour {
 			
 			if(FirstPerson == true)
 			{
+				ActiveCamera = FirstPersonCamera;
 				FirstPersonCamera.GetComponent<Camera>().enabled = true;
 				ThirdPersonCamera.gameObject.SetActive(false);
 			}
 			
 			if(FirstPerson == false)
 			{
+				ActiveCamera = ThirdPersonCamera;
 				FirstPersonCamera.GetComponent<Camera>().enabled = false;
 				ThirdPersonCamera.gameObject.SetActive(true);
 				

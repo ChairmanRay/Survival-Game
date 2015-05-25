@@ -248,17 +248,38 @@ public class PlayerScript : MonoBehaviour {
 			}
 		}
 		
+		RaycastHit hit;
 		//Left click (firing)
-		if(Input.GetKey(KeyCode.Mouse0))
+		if(Input.GetKeyDown(KeyCode.Mouse0))// || Input.GetKey(KeyCode.Mouse0))) && weaponData.AmmoInClip >= 1 && weaponData.CanShoot == true)
 		{
-			
+			Vector3 fwd = PrimaryWeapon.transform.TransformDirection(Vector3.forward);
+			if(Physics.Raycast(MyCamera.GetComponent<PlayerCamera>().ActiveCamera.transform.position, fwd, out hit, PrimaryWeapon.GetComponent<GunScript>().Range))
+			{
+				//If we hit a player
+				if(hit.collider.tag == "Player")
+				{
+					print ("Hit a player");
+				}
+				
+				//If we hit a zombie
+				if(hit.collider.name == "Zombie")
+				{
+					print ("Hit a zombie");
+				}
+				
+				//If we hit the ground
+				if(hit.collider.name == "Terrain")
+				{
+					print ("Hit the ground");
+				}
+			}
 		}
 		
 		//Right click (aiming)
 		if(Input.GetKey(KeyCode.Mouse1))
 		{
 			PrimaryWeapon.transform.localPosition = PrimaryWeapon.GetComponent<GunScript>().LocalAimPosition;
-			MyCamera.GetComponent<Camera>().fieldOfView = 40;
+			MyCamera.GetComponent<Camera>().fieldOfView = PrimaryWeapon.GetComponent<GunScript>().FOVwhenAiming;
 		}
 		else
 		{
