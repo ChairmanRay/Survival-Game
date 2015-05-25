@@ -40,6 +40,21 @@ public class Chat : MonoBehaviour
 				chatMode = ChatModes.PARTY;
 			}
 		}
+		else
+		{
+			if(Input.GetKeyDown(KeyCode.F1))
+			{
+				chatMode = ChatModes.PROXIMITY;
+			}
+			else if(Input.GetKeyDown(KeyCode.F2))
+			{
+				chatMode = ChatModes.SERVER;
+			}
+			else if(Input.GetKeyDown(KeyCode.F3))
+			{
+				chatMode = ChatModes.PARTY;
+			}
+		}
 	}
 	
 	void OnGUI()
