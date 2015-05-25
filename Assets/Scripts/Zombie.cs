@@ -8,8 +8,9 @@ public class Zombie : MonoBehaviour
 	private float attackRange = 3;
 	private float attackSpeed = 1;
 	private float nextAttack = 0;
-	private float moveSpeed = 5;
+	private int attackDamage = 1;
 	private Transform target = null;
+	private PlayerHealth targetHealth = null;
 	private NavMeshAgent nav;
 	
 	void Awake () 
@@ -21,6 +22,7 @@ public class Zombie : MonoBehaviour
 	{
 		if (target == null && GameObject.FindGameObjectWithTag ("Player")) {
 			target = GameObject.FindGameObjectWithTag ("Player").transform;
+			targetHealth = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<PlayerHealth>();
 		} 
 		else if (target)
 		{
@@ -45,6 +47,7 @@ public class Zombie : MonoBehaviour
 		nav.velocity = new Vector3(0,0,0);
 		this.gameObject.transform.localScale = new Vector3(1, 0.9f, 1);
 		yield return new WaitForSeconds(0.3f);
+		targetHealth.TakeDamage (attackDamage);
 		this.gameObject.transform.localScale = new Vector3(1, 1, 1);
 	}
 }

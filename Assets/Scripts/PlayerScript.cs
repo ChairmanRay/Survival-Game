@@ -98,7 +98,7 @@ public class PlayerScript : MonoBehaviour {
 		}
 		
 		transform.name = ("Player" + GetComponent<NetworkView>().owner);
-		MyBody.tag = "Player";
+		transform.tag = "Player";
 		
 		GetComponent<Rigidbody>().freezeRotation = true;
 		GetComponent<Rigidbody>().useGravity = false;
