@@ -16,6 +16,8 @@ public class PlayerScript : MonoBehaviour {
 	public GameObject QuickSlot5;
 	public GameObject QuickSlot6;
 	
+	private GameObject LastHitBy = null;
+	
 	private Vector3 fwd; //The direction the raycast will go when you fire
 	
 	//Health, hunger, thirst, stamina
@@ -29,6 +31,7 @@ public class PlayerScript : MonoBehaviour {
 	public Texture HitMarker;
 	private bool HitPlayer = false;
 	
+	//Walk and run speeds
 	public float PlayerSpeedWalk = 5.0f;
 	public float PlayerSpeedSprint = 8.0f;
 	
@@ -293,6 +296,7 @@ public class PlayerScript : MonoBehaviour {
 					GameObject PlayersBody = hit.collider.gameObject;
 					NetworkView targetID = PlayersBody.transform.parent.GetComponent<NetworkView>();
 					targetID.RPC("RecievingDamage", RPCMode.All, Random.Range(PrimaryWeapon.GetComponent<GunScript>().MinDamage, PrimaryWeapon.GetComponent<GunScript>().MaxDamage));
+					targetID.RPC("LastHitByPlayer", RPCMode.All, gameObject.name);
 				}
 				
 				//If we hit a zombie
@@ -357,6 +361,13 @@ public class PlayerScript : MonoBehaviour {
 		Health -= ThisDamage;
 	}
 	
+	[RPC]
+	public void LastHitByPlayer(string ThisPlayerName)
+	{
+		print (ThisPlayerName);
+		LastHitBy = GameObject.Find(ThisPlayerName);
+	}
+	
 	//Calculates the jump height
 	float CalculateJumpVerticalSpeed() 
 	{
@@ -379,6 +390,11 @@ public class PlayerScript : MonoBehaviour {
 			GUI.Label(new Rect(100, 140, 200, 200),"Hunger: " + (int)HungerLevel);
 			//Display your player's thirst
 			GUI.Label(new Rect(100, 160, 200, 200),"Thirst: " + (int)ThirstLevel);
+			//See who you were killed by
+			if(LastHitBy != null)
+			{
+				GUI.Label(new Rect(100, 180, 200, 200),"Last Hit By: " + LastHitBy.transform.name);
+			}
 			
 			//Crosshair texture
 			GUI.DrawTexture(new Rect(Screen.width / 2 - 22.5f, Screen.height / 2 - 22.5f, 45, 45), Crosshair, ScaleMode.StretchToFill, true, 10.0F);
