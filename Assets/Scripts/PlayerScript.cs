@@ -130,18 +130,6 @@ public class PlayerScript : MonoBehaviour {
 		transform.Rotate(new Vector3(0, Input.GetAxis("Mouse X"), 0) * Time.deltaTime * 200);
 		PrimaryWeapon.transform.localPosition = new Vector3(0.28f, -0.34f, 0.9f);
 		
-		if(HungerLevel > 0)
-		{
-			//This formula will change
-			HungerLevel -= (0.1f * Time.deltaTime);
-		}
-		
-		if(ThirstLevel > 0)
-		{
-			//This formula will change
-			ThirstLevel -= (0.1f * Time.deltaTime);
-		}
-		
 		//If my player is touching the ground
 		if (grounded) 
 		{
@@ -182,7 +170,7 @@ public class PlayerScript : MonoBehaviour {
 			if(Input.GetKey(KeyCode.LeftShift) && Stamina > 0)
 			{
 				IsSprinting = true;
-				Stamina -= (1.5f * Time.deltaTime);
+				Stamina -= (1.2f * Time.deltaTime); //You will run out of sprint in 1:40
 				// Calculate how fast we should be moving
 				targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 				targetVelocity = transform.TransformDirection(targetVelocity);
@@ -195,16 +183,41 @@ public class PlayerScript : MonoBehaviour {
 				velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
 				velocityChange.y = 0;
 				GetComponent<Rigidbody>().AddForce(velocityChange, ForceMode.VelocityChange);
+				
+				if(HungerLevel > 0)
+				{
+					//This formula will change
+					HungerLevel -= (0.14f * Time.deltaTime); //Down 1 every 10 seconds
+				}
+				
+				if(ThirstLevel > 0)
+				{
+					//This formula will change
+					ThirstLevel -= (0.18f * Time.deltaTime); //Down 1 every 8 seconds
+				}
 			}
 			else
 			{
 				IsSprinting = false;
+				
+				//While standing/walking your hunger and thirst goes down slower
+				if(HungerLevel > 0)
+				{
+					//This formula will change
+					HungerLevel -= (0.08f * Time.deltaTime); //Down 1 every 15 seconds
+				}
+				
+				if(ThirstLevel > 0)
+				{
+					//This formula will change
+					ThirstLevel -= (0.08f * Time.deltaTime); //Down 1 every 15 seconds
+				}
 			}
 			
 			if(IsSprinting == false && Stamina < 100)
 			{
 				//Stamina needs to regenerate slower
-				Stamina += (1f * Time.deltaTime);
+				Stamina += (1f * Time.deltaTime); //Sprint will regenerate from 0 to 100 in 2 minutes
 			}
 			
 			//Crouching
