@@ -7,11 +7,16 @@ public class PlayerScript : MonoBehaviour {
 	public GameObject MyBody;
 	//Weapons and quick slots
 	public GameObject PrimaryWeapon;//Quickslot 1
+	private bool PrimaryWeaponActive = true;
+	
 	public GameObject SecondaryWeapon;//Quickslot 2
+	private bool SecondaryWeaponActive = false;
 	public GameObject QuickSlot3;
 	public GameObject QuickSlot4;
 	public GameObject QuickSlot5;
 	public GameObject QuickSlot6;
+	
+	private Vector3 fwd; //The direction the raycast will go when you fire
 	
 	//Health, hunger, thirst, stamina
 	public float Health = 100;
@@ -22,6 +27,7 @@ public class PlayerScript : MonoBehaviour {
 	//GUI crosshairs
 	public Texture Crosshair;
 	public Texture HitMarker;
+	private bool HitPlayer = false;
 	
 	public float PlayerSpeedWalk = 5.0f;
 	public float PlayerSpeedSprint = 8.0f;
@@ -129,6 +135,9 @@ public class PlayerScript : MonoBehaviour {
 		//Change rotation based on mouse movement
 		transform.Rotate(new Vector3(0, Input.GetAxis("Mouse X"), 0) * Time.deltaTime * 200);
 		PrimaryWeapon.transform.localPosition = new Vector3(0.28f, -0.34f, 0.9f);
+		
+		//Check to see what my health is at and tell other players
+		GetComponent<NetworkView>().RPC("GetMyHealth", RPCMode.All);
 		
 		//If my player is touching the ground
 		if (grounded) 
@@ -265,13 +274,25 @@ public class PlayerScript : MonoBehaviour {
 		//Left click (firing)
 		if(Input.GetKeyDown(KeyCode.Mouse0))// || Input.GetKey(KeyCode.Mouse0))) && weaponData.AmmoInClip >= 1 && weaponData.CanShoot == true)
 		{
-			Vector3 fwd = PrimaryWeapon.transform.TransformDirection(Vector3.forward);
+			if(PrimaryWeaponActive == true)
+			{
+				fwd = PrimaryWeapon.transform.TransformDirection(Vector3.forward);
+			}
+			else if(SecondaryWeaponActive == true)
+			{
+				fwd = SecondaryWeapon.transform.TransformDirection(Vector3.forward);
+			}
+			
 			if(Physics.Raycast(MyCamera.GetComponent<PlayerCamera>().ActiveCamera.transform.position, fwd, out hit, PrimaryWeapon.GetComponent<GunScript>().Range))
 			{
 				//If we hit a player
 				if(hit.collider.tag == "Player")
 				{
-					print ("Hit a player");
+					HitPlayer = true;
+					
+					GameObject PlayersBody = hit.collider.gameObject;
+					NetworkView targetID = PlayersBody.transform.parent.GetComponent<NetworkView>();
+					targetID.RPC("RecievingDamage", RPCMode.All, Random.Range(PrimaryWeapon.GetComponent<GunScript>().MinDamage, PrimaryWeapon.GetComponent<GunScript>().MaxDamage));
 				}
 				
 				//If we hit a zombie
@@ -319,6 +340,22 @@ public class PlayerScript : MonoBehaviour {
 		grounded = true;    
 	}
 
+	[RPC]
+	public void GetMyHealth()
+	{
+		/*
+		if(Health <= 0)
+		{
+			
+		}
+		*/
+	}
+	
+	[RPC]
+	public void RecievingDamage(float ThisDamage)
+	{
+		Health -= ThisDamage;
+	}
 	
 	//Calculates the jump height
 	float CalculateJumpVerticalSpeed() 
@@ -342,9 +379,23 @@ public class PlayerScript : MonoBehaviour {
 			GUI.Label(new Rect(100, 140, 200, 200),"Hunger: " + (int)HungerLevel);
 			//Display your player's thirst
 			GUI.Label(new Rect(100, 160, 200, 200),"Thirst: " + (int)ThirstLevel);
+			
 			//Crosshair texture
 			GUI.DrawTexture(new Rect(Screen.width / 2 - 22.5f, Screen.height / 2 - 22.5f, 45, 45), Crosshair, ScaleMode.StretchToFill, true, 10.0F);
+			//Create a crosshair so you know you hit someone
+			if(HitPlayer == true)
+			{
+				GUI.DrawTexture(new Rect(Screen.width / 2 - 12.5f, Screen.height / 2 - 12.5f, 25, 25), HitMarker, ScaleMode.StretchToFill, true, 10.0F);
+				StartCoroutine(HitPlayerWait());
+			}
 		}
+	}
+	
+	IEnumerator HitPlayerWait()
+	{
+		yield return new WaitForSeconds(0.1f);
+		
+		HitPlayer = false;
 	}
 	
 	void OnApplicationQuit()
