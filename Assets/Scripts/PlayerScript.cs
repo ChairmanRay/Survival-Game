@@ -4,7 +4,8 @@ using System.Collections;
 public class PlayerScript : MonoBehaviour {
 	
 	public GameObject MyCamera;
-	public GameObject MyBody;
+	//public GameObject MyBody;
+	//public GameObject MyHead;
 	//Weapons and quick slots
 	public GameObject PrimaryWeapon;//Quickslot 1
 	private bool PrimaryWeaponActive = true;
@@ -86,7 +87,7 @@ public class PlayerScript : MonoBehaviour {
 			
 			if(Physics.Raycast(MyCamera.GetComponent<PlayerCamera>().ActiveCamera.transform.position, fwd, out hit, PrimaryWeapon.GetComponent<GunScript>().Range))
 			{
-				//If we hit a player
+				//If we hit a player's body
 				if(hit.collider.tag == "Player")
 				{
 					HitPlayer = true;
@@ -94,6 +95,18 @@ public class PlayerScript : MonoBehaviour {
 					GameObject PlayersBody = hit.collider.gameObject;
 					NetworkView targetID = PlayersBody.transform.parent.GetComponent<NetworkView>();
 					targetID.RPC("RecievingDamage", RPCMode.All, Random.Range(PrimaryWeapon.GetComponent<GunScript>().MinDamage, PrimaryWeapon.GetComponent<GunScript>().MaxDamage));
+					targetID.RPC("LastHitByPlayer", RPCMode.All, gameObject.name);
+				}
+				
+				//If we hit a player's head
+				if(hit.collider.tag == "PlayerHead")
+				{
+					HitPlayer = true;
+					print ("Hit head");
+					
+					GameObject PlayersHead = hit.collider.gameObject;
+					NetworkView targetID = PlayersHead.transform.parent.parent.GetComponent<NetworkView>();
+					targetID.RPC("RecievingDamage", RPCMode.All, Random.Range(PrimaryWeapon.GetComponent<GunScript>().MinDamage * 1.2f, PrimaryWeapon.GetComponent<GunScript>().MaxDamage * 1.2f));
 					targetID.RPC("LastHitByPlayer", RPCMode.All, gameObject.name);
 				}
 				
