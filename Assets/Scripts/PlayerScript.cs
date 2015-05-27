@@ -41,12 +41,12 @@ public class PlayerScript : MonoBehaviour {
 	
 	public float maxVelocityChange = 15.0f;
 	
-	public bool IsJump = true;
 	public bool Crouching = false;
 	public bool Prone = false;
 	public bool IsSprinting = false;
 	
 	private bool WalkingDiagonal = false;
+	public bool TouchingTheGround = false;
 	private bool grounded = false;
 	
 	public Vector3 targetVelocity = Vector3.zero;
@@ -109,7 +109,6 @@ public class PlayerScript : MonoBehaviour {
 			GetComponent<Rigidbody>().isKinematic = true;
 		}
 		
-		transform.name = ("Player" + GetComponent<NetworkView>().owner);
 		transform.tag = "Player";
 		
 		GetComponent<Rigidbody>().freezeRotation = true;
@@ -146,6 +145,19 @@ public class PlayerScript : MonoBehaviour {
 		Health = Mathf.Round(Health * 1f) / 1f;
 		GetComponent<NetworkView>().RPC("GetMyHealth", RPCMode.All);
 		
+		RaycastHit hit;
+		Vector3 DownDir = transform.TransformDirection(Vector3.down);
+		if(Input.GetButtonDown("Jump")) 
+		{
+			if(Physics.Raycast(transform.position, DownDir, out hit, 1.05f))
+			{
+				if(hit.collider.name == "Terrain")
+				{
+					GetComponent<Rigidbody>().velocity = new Vector3(0, CalculateJumpVerticalSpeed(), 0);
+				}
+			}
+		}
+		
 		//If my player is touching the ground
 		if (grounded) 
 		{
@@ -168,7 +180,7 @@ public class PlayerScript : MonoBehaviour {
 			targetVelocity = transform.TransformDirection(targetVelocity);
 			targetVelocity *= PlayerSpeedWalk;
 			
-			// Apply a force that attempts to reach our target velocity
+			//Apply a force that attempts to reach our target velocity
 			Vector3 velocity = GetComponent<Rigidbody>().velocity;
 			Vector3 velocityChange = (targetVelocity - velocity);
 			velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
@@ -176,11 +188,13 @@ public class PlayerScript : MonoBehaviour {
 			velocityChange.y = 0;
 			GetComponent<Rigidbody>().AddForce(velocityChange, ForceMode.VelocityChange);
 			
-			// Jumping
-			if (Input.GetButton("Jump") && IsJump) 
+			//Jumping
+			/*
+			if(Input.GetButtonDown("Jump")) 
 			{
 				GetComponent<Rigidbody>().velocity = new Vector3(velocity.x, CalculateJumpVerticalSpeed(), velocity.z);
 			}
+			*/
 			
 			//Sprint Movement
 			if(Input.GetKey(KeyCode.LeftShift) && Stamina > 0)
@@ -277,7 +291,6 @@ public class PlayerScript : MonoBehaviour {
 			}
 		}
 		
-		RaycastHit hit;
 		//Left click (firing)
 		if(Input.GetKeyDown(KeyCode.Mouse0))// || Input.GetKey(KeyCode.Mouse0))) && weaponData.AmmoInClip >= 1 && weaponData.CanShoot == true)
 		{
