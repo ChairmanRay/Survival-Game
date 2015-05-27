@@ -121,6 +121,7 @@ public class PlayerMovement : MonoBehaviour
 			} else {
 				walkingDiagonal = false;
 			}
+			
 			// Calculate how fast we should be moving
 			Vector3 targetVelocity = new Vector3 (Input.GetAxis ("Horizontal"), 0, Input.GetAxis ("Vertical"));
 			targetVelocity = transform.TransformDirection (targetVelocity);
@@ -139,23 +140,38 @@ public class PlayerMovement : MonoBehaviour
 			{
 				RaycastHit hit;
 				Vector3 DownDir = transform.TransformDirection (Vector3.down);
-				if (Physics.Raycast (transform.position, DownDir, out hit, 1.05f)) {
-					if (hit.collider.name == "Terrain") {
+				if(Physics.Raycast (transform.position, DownDir, out hit, 1.05f))
+				{
+					//Only jump if you are walking/standing
+					if(hit.collider.name == "Terrain" && currentMovement == MovementMode.WALK)
+					{
 						GetComponent<Rigidbody> ().velocity = new Vector3 (velocity.x, CalculateJumpVerticalSpeed (), velocity.z);
 					}
 				}
-				if (currentMovement == MovementMode.PRONE) {
+				
+				//If you are prone and press jump, stand up
+				if (currentMovement == MovementMode.PRONE)
+				{
 					currentMovement = MovementMode.WALK;
 					MyBody.transform.rotation = Quaternion.Euler (0, transform.eulerAngles.y, transform.eulerAngles.z);
 					MyCamera.transform.localPosition = new Vector3 (0, 1, 0);
 				}
 			}
 			
+			//Walking
+			if(currentMovement == MovementMode.WALK)
+			{
+				if(GetComponent<PlayerScript>().Stamina < 100)
+				{
+					GetComponent<PlayerScript>().Stamina += (1f * Time.deltaTime); //Sprint will regenerate from 0 to 100 in 2 minutes
+				}
+			}
+			
 			//Sprint Movement
-			if (Input.GetKey (KeyCode.LeftShift) && (Input.GetKey (KeyCode.W) || Input.GetKey (KeyCode.A) || Input.GetKey (KeyCode.S) || Input.GetKey (KeyCode.D)) && currentMovement == MovementMode.WALK /*&& Stamina > 0*/) 
+			if (Input.GetKey (KeyCode.LeftShift) && (Input.GetKey (KeyCode.W) || Input.GetKey (KeyCode.A) || Input.GetKey (KeyCode.S) || Input.GetKey (KeyCode.D)) && currentMovement == MovementMode.WALK && GetComponent<PlayerScript>().Stamina > 0) 
 			{
 				currentMovement = MovementMode.SPRINT;
-				//Stamina -= (1.2f * Time.deltaTime); //You will run out of sprint in 1:40
+				GetComponent<PlayerScript>().Stamina -= (3.1f * Time.deltaTime); //You will run out of sprint in 1:40
 			} else if (currentMovement == MovementMode.SPRINT) {
 				currentMovement = MovementMode.WALK;
 			}
