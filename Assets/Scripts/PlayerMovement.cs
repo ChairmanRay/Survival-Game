@@ -2,29 +2,33 @@
 using System.Collections;
 
 
+public static class MovementSpeed
+{
+	public const float walk = 5.0f;
+	public const float sprint = 7.0f;
+	public const float crouch = 3.0f;
+	public const float prone = 1.5f;
+	public const float diagonalModifier = 0.707f;
+}
+	
 public class PlayerMovement : MonoBehaviour
 {
 	public GameObject MyCamera;
 	public GameObject MyBody;
 
 	//Walk and run speeds
-	private float PlayerSpeedWalk = 5.0f;
-	private float PlayerSpeedSprint = 7.0f;
+	private float currentMovementSpeed = 5.0f;
 	
 	private float gravity = 10.0f;
 	private float jumpHeight = 2.0f;
 	
 	private float maxVelocityChange = 15.0f;
+
+	private enum MovementMode{WALK, SPRINT, CROUCH, PRONE};
+	private MovementMode currentMovement = MovementMode.WALK;
 	
-	public bool Crouching = false;
-	public bool Prone = false;
-	public bool IsSprinting = false;
-	
-	private bool WalkingDiagonal = false;
-	private bool TouchingTheGround = false;
+	private bool walkingDiagonal = false;
 	private bool grounded = false;
-	
-	//private Vector3 targetVelocity = Vector3.zero;
 	
 	//Everything to do with sync
 	private float lastSynchronizationTime = 0f;
@@ -34,6 +38,7 @@ public class PlayerMovement : MonoBehaviour
 	private Vector3 syncEndPosition = Vector3.zero;
 	private Quaternion syncStartRotation = Quaternion.identity;
 	private Quaternion syncEndRotation = Quaternion.identity;
+
 	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info)
 	{
 		Vector3 syncPosition = transform.position;
@@ -102,39 +107,28 @@ public class PlayerMovement : MonoBehaviour
 	
 	void CheckInput()
 	{
-		RaycastHit hit;
-
 		//Lock Z rotation
 		transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 0);
 		//Change rotation based on mouse movement
 		transform.Rotate(new Vector3(0, Input.GetAxis("Mouse X"), 0) * Time.deltaTime * 200);
-		
+
+		MyBody.transform.localScale = new Vector3(1, 1, 1);
+
 		//If my player is touching the ground
 		if (grounded) 
 		{
 			if((Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A)))
 			{
-				if(Crouching == false && Prone == false && IsSprinting == false)
-				{
-					WalkingDiagonal = true;
-					//Reduce speed because we are going diagonal
-					//5 * 0.7071 = 3.54
-					PlayerSpeedWalk = 3.54f;
-				}
-				else if(IsSprinting == true)
-				{
-					//7 * 0.7071 = 4.95
-					PlayerSpeedWalk = 4.95f;
-				}
+				walkingDiagonal = true;
 			}
 			else
 			{
-				WalkingDiagonal = false;
+				walkingDiagonal = false;
 			}
 			// Calculate how fast we should be moving
 			Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 			targetVelocity = transform.TransformDirection(targetVelocity);
-			targetVelocity *= PlayerSpeedWalk;
+			targetVelocity *= currentMovementSpeed;
 			
 			//Apply a force that attempts to reach our target velocity
 			Vector3 velocity = GetComponent<Rigidbody>().velocity;
@@ -147,83 +141,92 @@ public class PlayerMovement : MonoBehaviour
 			//Jumping
 			if(Input.GetButtonDown("Jump")) 
 			{
+				RaycastHit hit;
 				Vector3 DownDir = transform.TransformDirection(Vector3.down);
 				if(Physics.Raycast(transform.position, DownDir, out hit, 1.05f))
 				{
 					if(hit.collider.name == "Terrain")
 					{
-						if(WalkingDiagonal == true)
-						{
-							PlayerSpeedWalk = 3.54f;
-						}
-						else
-						{
-							PlayerSpeedWalk = 5;
-						}
-						
 						GetComponent<Rigidbody>().velocity = new Vector3(velocity.x, CalculateJumpVerticalSpeed(), velocity.z);
 					}
+				}
+				if(currentMovement == MovementMode.PRONE)
+				{
+					currentMovement = MovementMode.WALK;
+					MyBody.transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, transform.eulerAngles.z);
+					MyCamera.transform.localPosition = new Vector3(0, 1, 0);
 				}
 			}
 			
 			//Sprint Movement
-			if(Input.GetKey(KeyCode.LeftShift) && (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) && Prone == false && Crouching == false /*&& Stamina > 0*/)
+			if(Input.GetKey(KeyCode.LeftShift) && (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) && (currentMovement == MovementMode.WALK || currentMovement == MovementMode.SPRINT) /*&& Stamina > 0*/)
 			{
-				IsSprinting = true;
+				currentMovement = MovementMode.SPRINT;
 				//Stamina -= (1.2f * Time.deltaTime); //You will run out of sprint in 1:40
-				if(WalkingDiagonal == true)
-				{
-					PlayerSpeedWalk = 4.95f;
-				}
-				else
-				{
-					PlayerSpeedWalk = 7;
-				}
-
 			}
-			else
+			else if (currentMovement == MovementMode.SPRINT) 
 			{
-				IsSprinting = false;
+				currentMovement = MovementMode.WALK;
 			}
 			
 			//Crouching
-			if(Input.GetKey(KeyCode.LeftControl) && Prone == false)
+			if(Input.GetKey(KeyCode.LeftControl) && currentMovement != MovementMode.PRONE)
 			{
-				MyBody.transform.localScale = new Vector3(1, 0.5f, 1);
-				PlayerSpeedWalk = 3.0f;
-				PlayerSpeedSprint = 3.0f;
-				Crouching = true;
+				currentMovement = MovementMode.CROUCH;
 			}
-			else
+			else if(currentMovement != MovementMode.PRONE)
 			{
-				MyBody.transform.localScale = new Vector3(1, 1, 1);
-				Crouching = false;
+				currentMovement = MovementMode.WALK;
 			}
 			
 			//Going prone
 			if(Input.GetKeyDown(KeyCode.Z))
 			{
-				Prone = !Prone;
+				currentMovement = (currentMovement == MovementMode.PRONE) ? MovementMode.WALK : MovementMode.PRONE;
 			}
 			
-			if(Prone == true)
+			if(currentMovement == MovementMode.PRONE)
 			{
 				MyBody.transform.rotation = Quaternion.Euler(90, transform.eulerAngles.y, transform.eulerAngles.z);
 				MyCamera.transform.localPosition = new Vector3(0, 0.4f, 0.6f);
-				PlayerSpeedWalk = 1.5f;
-				PlayerSpeedSprint = 1.5f;
 			}
-			else if(Prone == false)
+			else
 			{
 				MyBody.transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, transform.eulerAngles.z);
 				MyCamera.transform.localPosition = new Vector3(0, 1, 0);
 			}
-			
-			if(Crouching == false && Prone == false && WalkingDiagonal == false && IsSprinting == false)
+
+			switch(currentMovement)
 			{
-				PlayerSpeedWalk = 5.0f;
-				PlayerSpeedSprint = 7.0f;
+			case MovementMode.SPRINT:
+				currentMovementSpeed = MovementSpeed.sprint;
+				break;
+			case MovementMode.CROUCH:
+				MyBody.transform.localScale = new Vector3(1, 0.5f, 1);
+				currentMovementSpeed = MovementSpeed.crouch;
+				break;
+			case MovementMode.PRONE:
+				currentMovementSpeed = MovementSpeed.prone;
+				break;
+			default:
+				currentMovementSpeed = MovementSpeed.walk;
+				break;
 			}
+			if(walkingDiagonal)
+			{
+				currentMovementSpeed *= MovementSpeed.diagonalModifier;
+			}
+		}
+		//Crouching
+		if(Input.GetKey(KeyCode.LeftControl) && currentMovement != MovementMode.PRONE)
+		{
+			MyBody.transform.localScale = new Vector3(1, 0.5f, 1);
+			currentMovementSpeed = MovementSpeed.crouch;
+			currentMovement = MovementMode.CROUCH;
+		}
+		else if(currentMovement != MovementMode.PRONE)
+		{
+			currentMovement = MovementMode.WALK;
 		}
 		// We apply gravity manually for more tuning control
 		GetComponent<Rigidbody>().AddForce(new Vector3 (0, -gravity * GetComponent<Rigidbody>().mass, 0));
