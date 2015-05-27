@@ -34,7 +34,7 @@ public class PlayerScript : MonoBehaviour {
 	
 	//Walk and run speeds
 	public float PlayerSpeedWalk = 5.0f;
-	public float PlayerSpeedSprint = 8.0f;
+	public float PlayerSpeedSprint = 7.0f;
 	
 	public float gravity = 10.0f;
 	public float jumpHeight = 2.0f;
@@ -146,29 +146,23 @@ public class PlayerScript : MonoBehaviour {
 		GetComponent<NetworkView>().RPC("GetMyHealth", RPCMode.All);
 		
 		RaycastHit hit;
-		Vector3 DownDir = transform.TransformDirection(Vector3.down);
-		if(Input.GetButtonDown("Jump")) 
-		{
-			if(Physics.Raycast(transform.position, DownDir, out hit, 1.05f))
-			{
-				if(hit.collider.name == "Terrain")
-				{
-					GetComponent<Rigidbody>().velocity = new Vector3(0, CalculateJumpVerticalSpeed(), 0);
-				}
-			}
-		}
 		
 		//If my player is touching the ground
 		if (grounded) 
 		{
 			if((Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A)))
 			{
-				if(Crouching == false && Prone == false)
+				if(Crouching == false && Prone == false && IsSprinting == false)
 				{
 					WalkingDiagonal = true;
 					//Reduce speed because we are going diagonal
+					//5 * 0.7071 = 3.54
 					PlayerSpeedWalk = 3.54f;
-					PlayerSpeedSprint = 5.56f;
+				}
+				else if(IsSprinting == true)
+				{
+					//7 * 0.7071 = 4.95
+					PlayerSpeedWalk = 4.95f;
 				}
 			}
 			else
@@ -189,30 +183,40 @@ public class PlayerScript : MonoBehaviour {
 			GetComponent<Rigidbody>().AddForce(velocityChange, ForceMode.VelocityChange);
 			
 			//Jumping
-			/*
 			if(Input.GetButtonDown("Jump")) 
 			{
-				GetComponent<Rigidbody>().velocity = new Vector3(velocity.x, CalculateJumpVerticalSpeed(), velocity.z);
+				Vector3 DownDir = transform.TransformDirection(Vector3.down);
+				if(Physics.Raycast(transform.position, DownDir, out hit, 1.05f))
+				{
+					if(hit.collider.name == "Terrain")
+					{
+						if(WalkingDiagonal == true)
+						{
+							PlayerSpeedWalk = 3.54f;
+						}
+						else
+						{
+							PlayerSpeedWalk = 5;
+						}
+						
+						GetComponent<Rigidbody>().velocity = new Vector3(velocity.x, CalculateJumpVerticalSpeed(), velocity.z);
+					}
+				}
 			}
-			*/
 			
 			//Sprint Movement
-			if(Input.GetKey(KeyCode.LeftShift) && Stamina > 0)
+			if(Input.GetKey(KeyCode.LeftShift) && (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) && Prone == false && Crouching == false && Stamina > 0)
 			{
 				IsSprinting = true;
 				Stamina -= (1.2f * Time.deltaTime); //You will run out of sprint in 1:40
-				// Calculate how fast we should be moving
-				targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-				targetVelocity = transform.TransformDirection(targetVelocity);
-				targetVelocity *= PlayerSpeedSprint;
-				
-				// Apply a force that attempts to reach our target velocity
-				velocity = GetComponent<Rigidbody>().velocity;
-				velocityChange = (targetVelocity - velocity);
-				velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
-				velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
-				velocityChange.y = 0;
-				GetComponent<Rigidbody>().AddForce(velocityChange, ForceMode.VelocityChange);
+				if(WalkingDiagonal == true)
+				{
+					PlayerSpeedWalk = 4.95f;
+				}
+				else
+				{
+					PlayerSpeedWalk = 7;
+				}
 				
 				if(HungerLevel > 0)
 				{
@@ -277,17 +281,16 @@ public class PlayerScript : MonoBehaviour {
 				PlayerSpeedWalk = 1.5f;
 				PlayerSpeedSprint = 1.5f;
 			}
-			
-			if(Prone == false)
+			else if(Prone == false)
 			{
 				MyBody.transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, transform.eulerAngles.z);
 				MyCamera.transform.localPosition = new Vector3(0, 1, 0);
 			}
 			
-			if(Crouching == false && Prone == false && WalkingDiagonal == false)
+			if(Crouching == false && Prone == false && WalkingDiagonal == false && IsSprinting == false)
 			{
 				PlayerSpeedWalk = 5.0f;
-				PlayerSpeedSprint = 8.0f;
+				PlayerSpeedSprint = 7.0f;
 			}
 		}
 		
