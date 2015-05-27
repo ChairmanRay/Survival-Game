@@ -101,10 +101,12 @@ public class PlayerScript : MonoBehaviour {
 		if(GetComponent<NetworkView>().isMine)
 		{
 			MyCamera.GetComponent<Camera>().enabled = true;
+			GetComponent<Rigidbody>().isKinematic = false;
 		}
 		else
 		{
 			MyCamera.GetComponent<Camera>().enabled = false;
+			GetComponent<Rigidbody>().isKinematic = true;
 		}
 		
 		transform.name = ("Player" + GetComponent<NetworkView>().owner);
