@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
 	//Walk and run speeds
 	private float currentMovementSpeed = 5.0f;
 	
-	private float gravity = 10.0f;
+	private float gravity = 20.0f;
 	private float jumpHeight = 2.0f;
 	
 	private float maxVelocityChange = 15.0f;
@@ -142,8 +142,8 @@ public class PlayerMovement : MonoBehaviour
 				Vector3 DownDir = transform.TransformDirection (Vector3.down);
 				if(Physics.Raycast (transform.position, DownDir, out hit, 1.05f))
 				{
-					//Only jump if you are walking/standing
-					if(hit.collider.name == "Terrain" && currentMovement == MovementMode.WALK)
+					//Only jump if you are walking/standing/running
+					if(hit.collider.name == "Terrain" && (currentMovement == MovementMode.WALK || currentMovement == MovementMode.SPRINT))
 					{
 						GetComponent<Rigidbody> ().velocity = new Vector3 (velocity.x, CalculateJumpVerticalSpeed (), velocity.z);
 					}
