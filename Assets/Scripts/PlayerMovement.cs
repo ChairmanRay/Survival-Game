@@ -115,94 +115,77 @@ public class PlayerMovement : MonoBehaviour
 		MyBody.transform.localScale = new Vector3(1, 1, 1);
 
 		//If my player is touching the ground
-		if (grounded) 
-		{
-			if((Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D)) || (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A)))
-			{
+		if (grounded) {
+			if ((Input.GetKey (KeyCode.W) && Input.GetKey (KeyCode.D)) || (Input.GetKey (KeyCode.W) && Input.GetKey (KeyCode.A)) || (Input.GetKey (KeyCode.S) && Input.GetKey (KeyCode.D)) || (Input.GetKey (KeyCode.S) && Input.GetKey (KeyCode.A))) {
 				walkingDiagonal = true;
-			}
-			else
-			{
+			} else {
 				walkingDiagonal = false;
 			}
 			// Calculate how fast we should be moving
-			Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-			targetVelocity = transform.TransformDirection(targetVelocity);
+			Vector3 targetVelocity = new Vector3 (Input.GetAxis ("Horizontal"), 0, Input.GetAxis ("Vertical"));
+			targetVelocity = transform.TransformDirection (targetVelocity);
 			targetVelocity *= currentMovementSpeed;
 			
 			//Apply a force that attempts to reach our target velocity
-			Vector3 velocity = GetComponent<Rigidbody>().velocity;
+			Vector3 velocity = GetComponent<Rigidbody> ().velocity;
 			Vector3 velocityChange = (targetVelocity - velocity);
-			velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
-			velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
+			velocityChange.x = Mathf.Clamp (velocityChange.x, -maxVelocityChange, maxVelocityChange);
+			velocityChange.z = Mathf.Clamp (velocityChange.z, -maxVelocityChange, maxVelocityChange);
 			velocityChange.y = 0;
-			GetComponent<Rigidbody>().AddForce(velocityChange, ForceMode.VelocityChange);
+			GetComponent<Rigidbody> ().AddForce (velocityChange, ForceMode.VelocityChange);
 			
 			//Jumping
-			if(Input.GetButtonDown("Jump")) 
+			if (Input.GetButtonDown ("Jump"))
 			{
 				RaycastHit hit;
-				Vector3 DownDir = transform.TransformDirection(Vector3.down);
-				if(Physics.Raycast(transform.position, DownDir, out hit, 1.05f))
-				{
-					if(hit.collider.name == "Terrain")
-					{
-						GetComponent<Rigidbody>().velocity = new Vector3(velocity.x, CalculateJumpVerticalSpeed(), velocity.z);
+				Vector3 DownDir = transform.TransformDirection (Vector3.down);
+				if (Physics.Raycast (transform.position, DownDir, out hit, 1.05f)) {
+					if (hit.collider.name == "Terrain") {
+						GetComponent<Rigidbody> ().velocity = new Vector3 (velocity.x, CalculateJumpVerticalSpeed (), velocity.z);
 					}
 				}
-				if(currentMovement == MovementMode.PRONE)
-				{
+				if (currentMovement == MovementMode.PRONE) {
 					currentMovement = MovementMode.WALK;
-					MyBody.transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, transform.eulerAngles.z);
-					MyCamera.transform.localPosition = new Vector3(0, 1, 0);
+					MyBody.transform.rotation = Quaternion.Euler (0, transform.eulerAngles.y, transform.eulerAngles.z);
+					MyCamera.transform.localPosition = new Vector3 (0, 1, 0);
 				}
 			}
 			
 			//Sprint Movement
-			if(Input.GetKey(KeyCode.LeftShift) && (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) && (currentMovement == MovementMode.WALK || currentMovement == MovementMode.SPRINT) /*&& Stamina > 0*/)
+			if (Input.GetKey (KeyCode.LeftShift) && (Input.GetKey (KeyCode.W) || Input.GetKey (KeyCode.A) || Input.GetKey (KeyCode.S) || Input.GetKey (KeyCode.D)) && currentMovement == MovementMode.WALK /*&& Stamina > 0*/) 
 			{
 				currentMovement = MovementMode.SPRINT;
 				//Stamina -= (1.2f * Time.deltaTime); //You will run out of sprint in 1:40
-			}
-			else if (currentMovement == MovementMode.SPRINT) 
-			{
+			} else if (currentMovement == MovementMode.SPRINT) {
 				currentMovement = MovementMode.WALK;
 			}
 			
 			//Crouching
-			if(Input.GetKey(KeyCode.LeftControl) && currentMovement != MovementMode.PRONE)
-			{
+			if (Input.GetKey (KeyCode.LeftControl) && currentMovement != MovementMode.PRONE) {
 				currentMovement = MovementMode.CROUCH;
-			}
-			else if(currentMovement != MovementMode.PRONE)
-			{
+			} else if (currentMovement == MovementMode.CROUCH) {
 				currentMovement = MovementMode.WALK;
 			}
 			
 			//Going prone
-			if(Input.GetKeyDown(KeyCode.Z))
-			{
+			if (Input.GetKeyDown (KeyCode.Z)) {
 				currentMovement = (currentMovement == MovementMode.PRONE) ? MovementMode.WALK : MovementMode.PRONE;
 			}
 			
-			if(currentMovement == MovementMode.PRONE)
-			{
-				MyBody.transform.rotation = Quaternion.Euler(90, transform.eulerAngles.y, transform.eulerAngles.z);
-				MyCamera.transform.localPosition = new Vector3(0, 0.4f, 0.6f);
-			}
-			else
-			{
-				MyBody.transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, transform.eulerAngles.z);
-				MyCamera.transform.localPosition = new Vector3(0, 1, 0);
+			if (currentMovement == MovementMode.PRONE) {
+				MyBody.transform.rotation = Quaternion.Euler (90, transform.eulerAngles.y, transform.eulerAngles.z);
+				MyCamera.transform.localPosition = new Vector3 (0, 0.4f, 0.6f);
+			} else {
+				MyBody.transform.rotation = Quaternion.Euler (0, transform.eulerAngles.y, transform.eulerAngles.z);
+				MyCamera.transform.localPosition = new Vector3 (0, 1, 0);
 			}
 
-			switch(currentMovement)
-			{
+			switch (currentMovement) {
 			case MovementMode.SPRINT:
 				currentMovementSpeed = MovementSpeed.sprint;
 				break;
 			case MovementMode.CROUCH:
-				MyBody.transform.localScale = new Vector3(1, 0.5f, 1);
+				MyBody.transform.localScale = new Vector3 (1, 0.5f, 1);
 				currentMovementSpeed = MovementSpeed.crouch;
 				break;
 			case MovementMode.PRONE:
@@ -212,22 +195,22 @@ public class PlayerMovement : MonoBehaviour
 				currentMovementSpeed = MovementSpeed.walk;
 				break;
 			}
-			if(walkingDiagonal)
-			{
+			if (walkingDiagonal) {
 				currentMovementSpeed *= MovementSpeed.diagonalModifier;
 			}
 		}
-		//Crouching
-		if(Input.GetKey(KeyCode.LeftControl) && currentMovement != MovementMode.PRONE)
+		//Crouching while jumping
+		else if (Input.GetKey (KeyCode.LeftControl) && currentMovement != MovementMode.PRONE) 
 		{
-			MyBody.transform.localScale = new Vector3(1, 0.5f, 1);
+			MyBody.transform.localScale = new Vector3 (1, 0.5f, 1);
 			currentMovementSpeed = MovementSpeed.crouch;
 			currentMovement = MovementMode.CROUCH;
-		}
-		else if(currentMovement != MovementMode.PRONE)
+		} 
+		else if (currentMovement != MovementMode.CROUCH && currentMovement != MovementMode.PRONE) 
 		{
 			currentMovement = MovementMode.WALK;
 		}
+
 		// We apply gravity manually for more tuning control
 		GetComponent<Rigidbody>().AddForce(new Vector3 (0, -gravity * GetComponent<Rigidbody>().mass, 0));
 		
