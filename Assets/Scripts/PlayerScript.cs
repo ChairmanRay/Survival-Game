@@ -16,7 +16,8 @@ public class PlayerScript : MonoBehaviour {
 	public GameObject QuickSlot5;
 	public GameObject QuickSlot6;
 	
-	private GameObject LastHitBy = null;
+	private GameObject LastHitBy = null; //Who was the last person to hit you
+	private bool IamDead = false;
 	
 	private Vector3 fwd; //The direction the raycast will go when you fire
 	
@@ -140,6 +141,7 @@ public class PlayerScript : MonoBehaviour {
 		PrimaryWeapon.transform.localPosition = new Vector3(0.28f, -0.34f, 0.9f);
 		
 		//Check to see what my health is at and tell other players
+		Health = Mathf.Round(Health * 1f) / 1f;
 		GetComponent<NetworkView>().RPC("GetMyHealth", RPCMode.All);
 		
 		//If my player is touching the ground
@@ -347,12 +349,10 @@ public class PlayerScript : MonoBehaviour {
 	[RPC]
 	public void GetMyHealth()
 	{
-		/*
 		if(Health <= 0)
 		{
-			
+			IamDead = true;
 		}
-		*/
 	}
 	
 	[RPC]
@@ -380,20 +380,24 @@ public class PlayerScript : MonoBehaviour {
 	{
 		if (GetComponent<NetworkView>().isMine)
 		{
+			GUI.skin.label.alignment = TextAnchor.UpperLeft;
 			//Display your player name
-			GUI.Label(new Rect(100, 80, 200, 200), ("Name: " + transform.name));
+			GUI.Label(new Rect(100, 80, 250, 200), ("Name: " + transform.name));
 			//Display your player's health
-			GUI.Label(new Rect(100, 100, 200, 200),"Health: " + Health);
+			GUI.Label(new Rect(100, 100, 200, 200),"Health: " + Mathf.Round(Health * 1f) / 1f);
 			//Display your player's stamina
 			GUI.Label(new Rect(100, 120, 200, 200),"Stamina: " + (int)Stamina);
 			//Display your player's hunger
 			GUI.Label(new Rect(100, 140, 200, 200),"Hunger: " + (int)HungerLevel);
 			//Display your player's thirst
 			GUI.Label(new Rect(100, 160, 200, 200),"Thirst: " + (int)ThirstLevel);
+			
 			//See who you were killed by
-			if(LastHitBy != null)
+			if(IamDead == true)
 			{
-				GUI.Label(new Rect(100, 180, 200, 200),"Last Hit By: " + LastHitBy.transform.name);
+				GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+				GUI.Label(new Rect(Screen.width / 2 - 140, Screen.height / 2 - 100, 280, 200),"<size=20>You are dead\n" + "Killed by: " + LastHitBy.transform.name + "</size>");
+				GUI.skin.label.alignment = TextAnchor.UpperLeft;
 			}
 			
 			//Crosshair texture
