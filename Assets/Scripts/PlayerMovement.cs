@@ -165,6 +165,19 @@ public class PlayerMovement : MonoBehaviour
 				{
 					GetComponent<PlayerScript>().Stamina += (1f * Time.deltaTime); //Sprint will regenerate from 0 to 100 in 2 minutes
 				}
+				
+				//While standing/walking your hunger and thirst goes down slower
+				if(GetComponent<PlayerScript>().HungerLevel > 0)
+				{
+					//This formula will change
+					GetComponent<PlayerScript>().HungerLevel -= (0.08f * Time.deltaTime); //Down 1 every 15 seconds
+				}
+				
+				if(GetComponent<PlayerScript>().ThirstLevel > 0)
+				{
+					//This formula will change
+					GetComponent<PlayerScript>().ThirstLevel -= (0.08f * Time.deltaTime); //Down 1 every 15 seconds
+				}
 			}
 			
 			//Sprint Movement
@@ -172,6 +185,19 @@ public class PlayerMovement : MonoBehaviour
 			{
 				currentMovement = MovementMode.SPRINT;
 				GetComponent<PlayerScript>().Stamina -= (3.1f * Time.deltaTime); //You will run out of sprint in 1:40
+				
+				if(GetComponent<PlayerScript>().HungerLevel > 0)
+				{
+					//This formula will change
+					GetComponent<PlayerScript>().HungerLevel -= (0.14f * Time.deltaTime); //Down 1 every 10 seconds
+				}
+				
+				if(GetComponent<PlayerScript>().ThirstLevel > 0)
+				{
+					//This formula will change
+					GetComponent<PlayerScript>().ThirstLevel -= (0.18f * Time.deltaTime); //Down 1 every 8 seconds
+				}
+				
 			} else if (currentMovement == MovementMode.SPRINT) {
 				currentMovement = MovementMode.WALK;
 			}
