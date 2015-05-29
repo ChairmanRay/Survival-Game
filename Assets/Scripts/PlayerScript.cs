@@ -7,6 +7,10 @@ public class PlayerScript : MonoBehaviour {
 	//public GameObject MyBody;
 	//public GameObject MyHead;
 	//Weapons and quick slots
+	private bool LookingAtLoot = false;
+	public GameObject LootObject;
+	public float LootTimer;
+	
 	public GameObject PrimaryWeapon;//Quickslot 1
 	private bool PrimaryWeaponActive = true;
 	
@@ -71,20 +75,59 @@ public class PlayerScript : MonoBehaviour {
 		Health = Mathf.Round(Health * 1f) / 1f;
 		GetComponent<NetworkView>().RPC("GetMyHealth", RPCMode.All);
 		
+		if(Input.GetKeyDown(KeyCode.I))
+		{
+			//Open inventory
+		}
+		
 		RaycastHit hit;
+		
+		if(PrimaryWeaponActive == true)
+		{
+			fwd = PrimaryWeapon.transform.TransformDirection(Vector3.forward);
+		}
+		else if(SecondaryWeaponActive == true)
+		{
+			fwd = SecondaryWeapon.transform.TransformDirection(Vector3.forward);
+		}
+		
+		//Check to see what we are looking at
+		if(Physics.Raycast(MyCamera.GetComponent<PlayerCamera>().ActiveCamera.transform.position, fwd, out hit, 4))
+		{
+			if(hit.collider.tag == "Loot")
+			{
+				LookingAtLoot = true;
+				LootObject = hit.collider.gameObject;
+			}
+			else
+			{
+				LookingAtLoot = false;
+				LootObject = null;
+			}
+		}
+		
+		//Picking up loot
+		if(Input.GetKey(KeyCode.E) && LookingAtLoot == true)
+		{
+			LootTimer += (1.5f * Time.deltaTime);
+			//It will take you 2 seconds to pick up an item
+			if(LootTimer >= 2)
+			{
+				//Play "pick up sound" so you know you picked up the loot
+				//...
+				Transform MyInventoryObjects = transform.FindChild("MyInventoryObjects");
+				LootObject.transform.parent = MyInventoryObjects.transform; //Parent loot to the player
+				LootObject.GetComponent<Loot>().enabled = false; //Turn of its loot script
+				LootObject.GetComponent<Renderer>().material = LootObject.GetComponent<Loot>().RegularMaterial; //Put its material back to normal
+				LootObject.transform.localPosition = new Vector3(0, 0, 0); //Center it in the player
+				LootObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f); //Make its scale small
+				LootObject = null;
+			}
+		}
 
 		//Left click (firing)
 		if(Input.GetKeyDown(KeyCode.Mouse0))// || Input.GetKey(KeyCode.Mouse0))) && weaponData.AmmoInClip >= 1 && weaponData.CanShoot == true)
 		{
-			if(PrimaryWeaponActive == true)
-			{
-				fwd = PrimaryWeapon.transform.TransformDirection(Vector3.forward);
-			}
-			else if(SecondaryWeaponActive == true)
-			{
-				fwd = SecondaryWeapon.transform.TransformDirection(Vector3.forward);
-			}
-			
 			if(Physics.Raycast(MyCamera.GetComponent<PlayerCamera>().ActiveCamera.transform.position, fwd, out hit, PrimaryWeapon.GetComponent<GunScript>().Range))
 			{
 				//If we hit a player's body
