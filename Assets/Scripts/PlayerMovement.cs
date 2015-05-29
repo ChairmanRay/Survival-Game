@@ -115,7 +115,20 @@ public class PlayerMovement : MonoBehaviour
 		MyBody.transform.localScale = new Vector3(1, 1, 1);
 
 		//If my player is touching the ground
-		if (grounded) {
+		if (grounded) 
+		{
+			//If we are not moving
+			if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.D))
+			{
+				//Freeze all constraints
+				GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+			}
+			else
+			{
+				//Unfreeze position constraints
+				GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+			}
+			
 			if ((Input.GetKey (KeyCode.W) && Input.GetKey (KeyCode.D)) || (Input.GetKey (KeyCode.W) && Input.GetKey (KeyCode.A)) || (Input.GetKey (KeyCode.S) && Input.GetKey (KeyCode.D)) || (Input.GetKey (KeyCode.S) && Input.GetKey (KeyCode.A))) {
 				walkingDiagonal = true;
 			} else {

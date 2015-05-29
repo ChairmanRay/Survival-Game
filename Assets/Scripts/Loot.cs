@@ -19,7 +19,7 @@ public class Loot : MonoBehaviour {
 	void Update()
 	{
 		player = GameObject.FindGameObjectWithTag("Player").transform;
-		if (Distance() < 25)
+		if (Distance() < 15)
 		{
 			//Player is in range
 			//print(player.name + " is " + Distance().ToString() + " units from " + t.name);
